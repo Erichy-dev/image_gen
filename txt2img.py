@@ -116,16 +116,32 @@ def interactive_loop(models, output_dir="Digital Paper Store"):
             console.print("[red]No prompts found in Excel file[/red]")
             continue
 
+        # Ask for duplication factor
+        duplication_factor = Prompt.ask(
+            "\nHow many times would you like to duplicate each prompt?",
+            default="1",
+            show_default=True
+        )
+        try:
+            duplication_factor = int(duplication_factor)
+            if duplication_factor < 1:
+                raise ValueError("Duplication factor must be at least 1")
+        except ValueError as e:
+            console.print(f"[red]Invalid duplication factor: {e}. Using 1.[/red]")
+            duplication_factor = 1
+
         # Select models based on choice
         selected_models = models.items() if choice.upper() == "A" else [(choice, models[choice])]
         console.print("[yellow]Using models:[/yellow]")
         for key, (name, _) in selected_models:
             console.print(f"[yellow]- {name}[/yellow]")
 
-        # Collect all prompts
+        # Collect all prompts and duplicate them
         all_prompts = []
         for data in prompts_data:
-            all_prompts.extend(data["Prompts"])
+            all_prompts.extend(data["Prompts"] * duplication_factor)
+
+        console.print(f"[blue]Processing {len(all_prompts)} total prompts ({len(all_prompts)//duplication_factor} unique prompts × {duplication_factor})[/blue]")
 
         # Process all prompts in parallel
         with Progress(
@@ -137,6 +153,8 @@ def interactive_loop(models, output_dir="Digital Paper Store"):
             with ThreadPoolExecutor(max_workers=len(all_prompts)) as executor:
                 futures = []
                 for prompt in all_prompts:
+                    # Add 2-second delay before submitting each prompt
+                    time.sleep(2)
                     future = executor.submit(
                         process_single_prompt,
                         prompt,
