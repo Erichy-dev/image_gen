@@ -18,14 +18,14 @@ def load_environment():
         raise ValueError("TOKEN not found in .env file")
     return token
 
-def warm_up_models(token, timeout=60):
+def warm_up_models(token, timeout=10):
     """Initialize and warm up all models with timeout"""
     console.print(Panel.fit("🎨 Initializing AI Models", style="bold magenta"))
     models = {
-        "1": ("Flux", InferenceClient("strangerzonehf/Flux-Midjourney-Mix2-LoRA", token=token)),
-        "2": ("Midjourney", InferenceClient("Jovie/Midjourney", token=token)),
-        "3": ("Seamless", InferenceClient("prithivMLmods/Seamless-Pattern-Design-Flux-LoRA", token=token)),
-        "4": {"Nercy", InferenceClient("Nercy/flux-dalle", token=token)}
+        "1": ("Flux", InferenceClient("strangerzonehf/Flux-Midjourney-Mix2-LoRA", token=token, timeout=30)),
+        "2": ("Midjourney", InferenceClient("Jovie/Midjourney", token=token, timeout=30)),
+        "3": ("Seamless", InferenceClient("prithivMLmods/Seamless-Pattern-Design-Flux-LoRA", token=token, timeout=30)),
+        "4": ("Nercy", InferenceClient("Nercy/flux-dalle", token=token, timeout=30))
     }
     
     start_time = time.time()
@@ -46,7 +46,7 @@ def warm_up_models(token, timeout=60):
                 thread.daemon = True
                 thread.start()
                 
-                thread.join(timeout=max(1, timeout - (time.time() - start_time)))
+                thread.join(timeout=2)
                 
                 if thread.is_alive():
                     raise TimeoutError(f"Warm-up for {name} timed out")
@@ -57,6 +57,7 @@ def warm_up_models(token, timeout=60):
             except Exception as e:
                 progress.update(task, completed=True)
                 console.print(f"[yellow]⚠ {name} warm-up skipped: {str(e)}[/yellow]")
+                continue
     
     elapsed = time.time() - start_time
     console.print(f"[blue]Model initialization completed in {elapsed:.1f} seconds[/blue]")

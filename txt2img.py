@@ -58,24 +58,36 @@ def process_single_prompt(prompt, models, output_dir, progress):
         # Process the generated images
         process_images(raw_output_dir, processed_output_dir)
         
-        # Upload to Drive and update Excel
-        try:
-            if get_drive_instance():
-                for image_path in generated_paths:
-                    drive_link = upload_file_to_drive(image_path)
-                    if drive_link:
-                        product_name = os.path.splitext(os.path.basename(image_path))[0]
-                        excel_path = update_product_catalog(
-                            product_name=product_name,
-                            prompt=prompt,
-                            folder_path=processed_output_dir,
-                            raw_path=raw_output_dir,
-                            drive_link=drive_link
-                        )
+        # Upload to Drive and update Excel - Simplified error handling
+        drive = get_drive_instance()
+        if not drive:
+            console.print("[red]Error: Google Drive not initialized[/red]")
+            return generated_paths
+
+        for image_path in generated_paths:
+            try:
+                # Upload both raw and processed images
+                raw_drive_link = upload_file_to_drive(image_path)
+                processed_path = os.path.join(processed_output_dir, os.path.basename(image_path))
+                processed_drive_link = upload_file_to_drive(processed_path)
                 
-                console.print(f"[green]✓ Product catalog updated for prompt: {prompt}[/green]")
-        except Exception as e:
-            console.print(f"[yellow]⚠ Failed to upload to Google Drive or update catalog: {e}[/yellow]")
+                if raw_drive_link and processed_drive_link:
+                    product_name = os.path.splitext(os.path.basename(image_path))[0]
+                    excel_path = update_product_catalog(
+                        product_name=product_name,
+                        prompt=prompt,
+                        folder_path=processed_output_dir,
+                        raw_path=raw_output_dir,
+                        drive_link=processed_drive_link,
+                        raw_drive_link=raw_drive_link  # Add raw image link
+                    )
+                    console.print(f"[green]✓ Uploaded and updated catalog for: {product_name}[/green]")
+                else:
+                    console.print(f"[yellow]⚠ Failed to upload some files for prompt: {prompt}[/yellow]")
+            
+            except Exception as e:
+                console.print(f"[red]Error uploading {os.path.basename(image_path)}: {str(e)}[/red]")
+                continue
     
     return generated_paths
 
@@ -140,21 +152,25 @@ def interactive_loop(models, output_dir="output"):
 def main():
     parser = argparse.ArgumentParser(description='Generate images from text prompt')
     parser.add_argument('--output', type=str, default='output', help='Output directory for generated images')
-    parser.add_argument('--upload', action='store_true', help='Upload generated images to Google Drive')
+    parser.add_argument('--upload', action='store_true', default=True, help='Upload generated images to Google Drive')
     args = parser.parse_args()
     
     try:
         console.print(Panel.fit("🚀 Starting Image Generation System", style="bold green"))
+        
+        # Move Google Drive initialization to the top and make it required
+        try:
+            init_google_drive(os.path.dirname(__file__))
+            console.print("[green]✓ Google Drive initialized successfully[/green]")
+        except Exception as e:
+            console.print(Panel.fit(
+                f"❌ Google Drive initialization failed: {e}\nPlease ensure Google Drive credentials are properly set up.",
+                title="Critical Error",
+                style="bold red"
+            ))
+            return  # Exit if Google Drive setup fails
+        
         token = load_environment()
-        
-        # Initialize Google Drive if upload flag is set
-        if args.upload:
-            try:
-                init_google_drive(os.path.dirname(__file__))
-                console.print("[green]✓ Google Drive initialized successfully[/green]")
-            except Exception as e:
-                console.print(f"[yellow]⚠ Google Drive initialization failed, continuing without upload capability: {e}[/yellow]")
-        
         models = warm_up_models(token)
         console.print("\n[green]All models initialized and ready![/green]")
         

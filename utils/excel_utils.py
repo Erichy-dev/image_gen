@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from openpyxl.styles import Alignment
 
-def update_product_catalog(product_name, prompt, folder_path, drive_link, raw_path=None, category="Seamless Pattern"):
+def update_product_catalog(product_name, prompt, folder_path, raw_path, drive_link, raw_drive_link):
     """
     Create or update an Excel file with product information.
     
@@ -11,9 +11,9 @@ def update_product_catalog(product_name, prompt, folder_path, drive_link, raw_pa
         product_name (str): Name of the product
         prompt (str): The prompt used to generate the image
         folder_path (str): Path to the processed image
-        drive_link (str): Google Drive sharing link
         raw_path (str): Path to the raw image
-        category (str, optional): Product category. Defaults to "Seamless Pattern"
+        drive_link (str): Google Drive sharing link
+        raw_drive_link (str): Google Drive sharing link for the raw image
     """
     excel_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "product_catalog.xlsx")
     
@@ -27,7 +27,7 @@ def update_product_catalog(product_name, prompt, folder_path, drive_link, raw_pa
         df = pd.DataFrame(columns=[
             'Product Name', 'Category', 'Prompts', 
             'Raw Folder Path', 'Processed Folder Path', 
-            'Google Drive Link', 'Created Date'
+            'Google Drive Link', 'Raw Google Drive Link', 'Created Date'
         ])
     else:
         print(f"[blue]Updating existing catalog: {excel_path}[/blue]")
@@ -36,11 +36,12 @@ def update_product_catalog(product_name, prompt, folder_path, drive_link, raw_pa
     # Prepare new row
     new_row = {
         'Product Name': product_name,
-        'Category': category,
+        'Category': "Seamless Pattern",
         'Prompts': prompt,
         'Raw Folder Path': raw_path,
         'Processed Folder Path': folder_path,
         'Google Drive Link': drive_link,
+        'Raw Google Drive Link': raw_drive_link,
         'Created Date': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
@@ -66,7 +67,8 @@ def update_product_catalog(product_name, prompt, folder_path, drive_link, raw_pa
                 'D': 40,  # Raw Folder Path
                 'E': 40,  # Processed Folder Path
                 'F': 50,  # Google Drive Link
-                'G': 20   # Created Date
+                'G': 50,  # Raw Google Drive Link
+                'H': 20   # Created Date
             }
             
             # Apply formatting

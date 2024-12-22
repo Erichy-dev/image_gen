@@ -9,5 +9,3 @@ INPUT_EXCEL_FILE = os.path.join(DOWNLOADS_FOLDER, "template (4).xlsx")
 IMAGE_OUTPUT_SIZE = (3600, 3600)
 IMAGE_DPI = (300, 300)
 SUPPORTED_IMAGE_FORMATS = ('.png', '.jpg', '.jpeg')
-
-# ... rest of your existing settings ... 
