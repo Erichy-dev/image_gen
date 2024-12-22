@@ -23,9 +23,14 @@ def process_single_prompt(prompt, models, output_dir, progress):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     start_time = time.time()
     
-    raw_output_dir = os.path.join(output_dir, "raw", timestamp)
-    processed_output_dir = os.path.join(output_dir, "processed", timestamp)
+    raw_output_dir = os.path.join(output_dir, "Digital Paper Store - Raw Folders", timestamp)
+    unprocessed_output_dir = os.path.join(output_dir, "Digital Paper Store - Digital Paper", timestamp)
+    processed_output_dir = os.path.join(output_dir, "Digital Paper Store - Seamless Paper", timestamp)
+    
+    # Create all necessary directories
     os.makedirs(raw_output_dir, exist_ok=True)
+    os.makedirs(unprocessed_output_dir, exist_ok=True)
+    os.makedirs(processed_output_dir, exist_ok=True)
     
     generated_paths = []
     
@@ -91,7 +96,7 @@ def process_single_prompt(prompt, models, output_dir, progress):
     
     return generated_paths
 
-def interactive_loop(models, output_dir="output"):
+def interactive_loop(models, output_dir="Digital Paper Store"):
     """Main interactive loop for generating images"""
     while True:
         console.print(Panel.fit("Available Models:", style="bold blue"))
@@ -151,7 +156,7 @@ def interactive_loop(models, output_dir="output"):
 
 def main():
     parser = argparse.ArgumentParser(description='Generate images from text prompt')
-    parser.add_argument('--output', type=str, default='output', help='Output directory for generated images')
+    parser.add_argument('--output', type=str, default='Digital Paper Store', help='Output directory for generated images')
     parser.add_argument('--upload', action='store_true', default=True, help='Upload generated images to Google Drive')
     args = parser.parse_args()
     
