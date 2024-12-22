@@ -33,45 +33,33 @@ def get_drive_instance():
     """Get the global drive instance"""
     return _drive_instance
 
-def upload_generated_images(output_dir, timestamp):
-    """Upload the generated images to Google Drive"""
+def upload_file_to_drive(file_path):
+    """Upload a single file to Google Drive and return its link"""
     try:
-        console.print("\n[yellow]Uploading to Google Drive...[/yellow]")
+        console.print(f"\n[yellow]Uploading {os.path.basename(file_path)} to Google Drive...[/yellow]")
         drive = get_drive_instance()
         if not drive:
             raise Exception("Google Drive not initialized")
 
-        # Create a folder with timestamp
-        folder_name = f"generated_images_{timestamp}"
-        gdrive_folder = drive.CreateFile({
-            'title': folder_name,
-            'mimeType': 'application/vnd.google-apps.folder'
+        # Create file in Drive
+        file_drive = drive.CreateFile({
+            'title': os.path.basename(file_path)
         })
-        gdrive_folder.Upload()
-        folder_id = gdrive_folder['id']
-
-        # Upload all files in the output directory from this generation
-        uploaded_files = []
-        for filename in os.listdir(output_dir):
-            if timestamp in filename:  # Only upload files from this generation
-                filepath = os.path.join(output_dir, filename)
-                if os.path.isfile(filepath):
-                    file_drive = drive.CreateFile({
-                        'title': filename,
-                        'parents': [{'id': folder_id}]
-                    })
-                    file_drive.SetContentFile(filepath)
-                    file_drive.Upload()
-                    uploaded_files.append(filename)
-                    console.print(f"[blue]Uploaded: {filename}[/blue]")
-
-        # Generate shareable link
-        share_link = f"https://drive.google.com/drive/folders/{folder_id}?usp=sharing"
+        file_drive.SetContentFile(file_path)
+        file_drive.Upload()
         
-        if uploaded_files:
-            console.print(f"[green]✓ Successfully uploaded {len(uploaded_files)} files to Google Drive[/green]")
-            console.print(f"[green]📁 Drive link: {share_link}[/green]")
+        # Make the file publicly accessible and get the link
+        file_drive.InsertPermission({
+            'type': 'anyone',
+            'value': 'anyone',
+            'role': 'reader'
+        })
+        
+        share_link = file_drive['alternateLink']
+        console.print(f"[green]✓ Successfully uploaded: {os.path.basename(file_path)}[/green]")
+        console.print(f"[green]🔗 File link: {share_link}[/green]")
+        
         return share_link
     except Exception as e:
-        console.print(f"[red]Error uploading to Google Drive: {e}[/red]")
-        return None 
+        console.print(f"[red]Error uploading file to Google Drive: {e}[/red]")
+        return None

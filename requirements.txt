@@ -9,3 +9,5 @@ rich
 timeout-decorator
 tenacity
 pydrive
+pandas
+openpyxl

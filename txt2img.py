@@ -11,7 +11,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from utils.model_utils import load_environment, warm_up_models
 from utils.generation_utils import generate_single_image
-from utils.drive_utils import init_google_drive, upload_generated_images
+from utils.drive_utils import init_google_drive, upload_file_to_drive
+from utils.excel_utils import update_product_catalog
+from utils.drive_utils import get_drive_instance
 
 console = Console()
 
@@ -73,7 +75,7 @@ def interactive_loop(models, output_dir="output"):
         if generated_paths:
             elapsed_time = time.time() - start_time
             success_message = (
-                f"✨ Generation completed in {elapsed_time:.2f} seconds\n\n"
+                f"Generation completed in {elapsed_time:.2f} seconds\n\n"
                 f"📁 Generated images:\n" +
                 "\n".join(f"   • [blue]{path}[/blue]" for path in generated_paths)
             )
@@ -81,17 +83,21 @@ def interactive_loop(models, output_dir="output"):
             
             # Try to upload to Google Drive if initialized
             try:
-                from utils.drive_utils import get_drive_instance
                 if get_drive_instance():
-                    drive_link = upload_generated_images(output_dir, timestamp)
-                    if drive_link:
-                        console.print(Panel.fit(
-                            f"🔗 Google Drive Link:\n[blue]{drive_link}[/blue]",
-                            title="Upload Success",
-                            style="bold green"
-                        ))
+                    for image_path in generated_paths:
+                        drive_link = upload_file_to_drive(image_path)
+                        if drive_link:
+                            product_name = os.path.splitext(os.path.basename(image_path))[0]
+                            excel_path = update_product_catalog(
+                                product_name=product_name,
+                                prompt=prompt,
+                                folder_path=os.path.dirname(image_path),
+                                drive_link=drive_link
+                            )
+                    
+                    console.print(f"[green]✓ Product catalog updated: {excel_path}[/green]")
             except Exception as e:
-                console.print(f"[yellow]⚠ Failed to upload to Google Drive: {e}[/yellow]")
+                console.print(f"[yellow]⚠ Failed to upload to Google Drive or update catalog: {e}[/yellow]")
         else:
             console.print(Panel.fit("❌ No images were successfully generated", title="Warning", style="bold yellow"))
 
