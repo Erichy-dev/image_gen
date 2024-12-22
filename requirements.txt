@@ -1,0 +1,11 @@
+Pillow
+tqdm
+python-dotenv
+requests
+ipykernel
+ipywidgets
+huggingface-hub
+rich
+timeout-decorator
+tenacity
+pydrive
