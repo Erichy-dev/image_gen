@@ -36,7 +36,7 @@ def generate_single_image(model_name, client, prompt, output_dir, timestamp, pro
     console.print(f"[cyan]Modified prompt: {unique_prompt}[/cyan]")
     
     max_retries = 6
-    timeout = 60
+    timeout = 120
     retry_delay = 3
 
     for attempt in range(max_retries):
