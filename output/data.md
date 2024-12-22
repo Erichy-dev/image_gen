@@ -1,0 +1,1 @@
+# Images are in the output folder
