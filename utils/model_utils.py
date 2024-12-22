@@ -25,6 +25,7 @@ def warm_up_models(token, timeout=60):
         "1": ("Flux", InferenceClient("strangerzonehf/Flux-Midjourney-Mix2-LoRA", token=token)),
         "2": ("Midjourney", InferenceClient("Jovie/Midjourney", token=token)),
         "3": ("Seamless", InferenceClient("prithivMLmods/Seamless-Pattern-Design-Flux-LoRA", token=token)),
+        "4": {"Nercy", InferenceClient("Nercy/flux-dalle", token=token)}
     }
     
     start_time = time.time()
